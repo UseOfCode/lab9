@@ -9,17 +9,11 @@ struct RecordType
     int     order; 
 };
 
-// Node for separate chaining
-struct Node
-{
-    struct RecordType record;
-    struct Node* next;
-};
-
 // HashType - hash table structure
 struct HashType
 {
-    struct Node* head; // pointer to the head of the linked list
+    struct RecordType record;
+    struct HashType* next;
 };
 
 // Compute the hash function
@@ -28,7 +22,7 @@ int hash(int x)
     return x % 23; // Modulo 23 hash function
 }
 
-// Parses input file to an integer array
+// parses input file to an integer array
 int parseData(char* inputFileName, struct RecordType** ppData)
 {
     FILE* inFile = fopen(inputFileName, "r");
@@ -65,7 +59,7 @@ int parseData(char* inputFileName, struct RecordType** ppData)
     return dataSz;
 }
 
-// Prints the records
+// prints the records
 void printRecords(struct RecordType pData[], int dataSz)
 {
     int i;
@@ -77,23 +71,23 @@ void printRecords(struct RecordType pData[], int dataSz)
     printf("\n\n");
 }
 
-// Display records in the hash structure
-// Skip the indices which are free
-// The output will be in the format:
+// display records in the hash structure
+// skip the indices which are free
+// the output will be in the format:
 // index x -> id, name, order -> id, name, order ....
 void displayRecordsInHash(struct HashType *pHashArray, int hashSz)
 {
-    struct Node* temp;
+    struct HashType* temp;
     for (int i = 0; i < hashSz; ++i)
     {
-        if (pHashArray[i].head != NULL) {
+        if (pHashArray[i].next != NULL) {
             printf("index %d -> ", i);
-            temp = pHashArray[i].head;
-            printf("%d, %c, %d", temp->record.id, temp->record.name, temp->record.order);
-            temp = temp->next;
+            temp = pHashArray[i].next;
             while (temp != NULL)
             {
-                printf(" -> %d, %c, %d", temp->record.id, temp->record.name, temp->record.order);
+                printf("%d, %c, %d", temp->record.id, temp->record.name, temp->record.order);
+                if (temp->next != NULL)
+                    printf(" -> ");
                 temp = temp->next;
             }
             printf("\n");
@@ -118,7 +112,7 @@ int main(void)
     // Initialize all records to NULL (free)
     for (int i = 0; i < hashSz; ++i)
     {
-        pHashArray[i].head = NULL;
+        pHashArray[i].next = NULL;
     }
 
     // Insert records into the hash table using separate chaining
@@ -127,28 +121,17 @@ int main(void)
         int index = hash(pRecords[i].id);
         
         // Create a new node
-        struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+        struct HashType* newNode = (struct HashType*)malloc(sizeof(struct HashType));
         newNode->record = pRecords[i];
         newNode->next = NULL;
         
         // If head is NULL, insert at head
-        if (pHashArray[index].head == NULL) {
-            pHashArray[index].head = newNode;
+        if (pHashArray[index].next == NULL) {
+            pHashArray[index].next = newNode;
         } else {
-            // Find the appropriate position to insert based on ascending order of IDs
-            struct Node* current = pHashArray[index].head;
-            struct Node* prev = NULL;
-            while (current != NULL && current->record.id < pRecords[i].id) {
-                prev = current;
-                current = current->next;
-            }
-            if (prev == NULL) {
-                newNode->next = pHashArray[index].head;
-                pHashArray[index].head = newNode;
-            } else {
-                prev->next = newNode;
-                newNode->next = current;
-            }
+            // Insert at the beginning of the linked list
+            newNode->next = pHashArray[index].next;
+            pHashArray[index].next = newNode;
         }
     }
 
@@ -159,10 +142,10 @@ int main(void)
     free(pRecords);
     for (int i = 0; i < hashSz; ++i)
     {
-        struct Node* temp = pHashArray[i].head;
+        struct HashType* temp = pHashArray[i].next;
         while (temp != NULL)
         {
-            struct Node* next = temp->next;
+            struct HashType* next = temp->next;
             free(temp);
             temp = next;
         }
