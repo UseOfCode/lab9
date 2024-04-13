@@ -100,7 +100,7 @@ int main(void)
     struct RecordType *pRecords;
     int recordSz = 0;
 
-    recordSz = parseData("input_lab_9.txt", &pRecords);
+    recordSz = parseData("input.txt", &pRecords);
     printRecords(pRecords, recordSz);
     
     // Determine the size of the hash table based on the number of records
